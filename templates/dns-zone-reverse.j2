@@ -1,0 +1,21 @@
+;
+; {{ansible_managed}}
+;
+; DNS Zone file for Wireguard Network {{wireguard_range}}
+;
+
+$TTL    604800
+@       IN      SOA     {{wireguard_dns_rev_soa}} (
+                        {{ansible_date_time.epoch}} ; Serial
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                         604800 )       ; Negative Cache TTL
+
+		IN		NS		{{wireguard_server}}.
+
+; PTR records
+
+{% for peer in wireguard_peers %}
+{{peer.ip|ipaddr('revdns')}} IN PTR {{peer.name}}. ; {{peer.ip}}
+{% endfor %}

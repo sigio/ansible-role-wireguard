@@ -1,0 +1,27 @@
+---
+
+wireguard_dir: "/etc/wireguard"
+wireguard_instance: "default"
+wireguard_instance_iface: "wg0"
+
+# Configure wireguard on this host
+wireguard_enabled: true
+
+# Install a local-facts plugin for wireguard facts
+wireguard_facts: true
+
+# Configure a DNS Zonefile for the wireguard subnet
+wireguard_dns: false
+
+# Subnet size of the wireguard subnet (/24 --> 24)
+wireguard_subnet4:      "24"
+
+# Subnet info
+wireguard_range_base:   "172.19.84"
+wireguard_range:        "{{wireguard_range_base}}.0/{{wireguard_subnet4}}"
+wireguard_port:         51820
+wireguard_server:       "fqdn-of-wireguard-server"
+wireguard_router:       "{{wireguard_range_base}}.1"
+
+# IPv6 network range (ipv6 /64 network range
+wireguard_range6:       "{{ipv6_ula}}:ABCD"

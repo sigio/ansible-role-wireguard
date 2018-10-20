@@ -1,0 +1,27 @@
+---
+
+- name: Install wireguard
+  include_tasks: "install-debian-ubuntu.yml"
+  when:
+    - ansible_os_family == "Debian"
+    - wireguard_enabled
+
+- name: Configure wireguard
+  import_tasks: "configure-client.yml"
+  when:
+    - wireguard_enabled
+
+- name: Ansible facts
+  include_tasks: "ansible_facts.yml"
+  when:
+    - wireguard_enabled
+    - wireguard_facts
+
+- name: DNS Information
+  include_tasks: "dns-zone.yml"
+  when:
+    - wireguard_enabled
+    - wireguard_dns
+    - ansible_hostname in wireguard_server
+  tags:
+    - wireguard_dns_rev

@@ -1,0 +1,40 @@
+# {{ ansible_managed }}
+# Wireguard configuration for instance {{wireguard_instance}}
+
+[Interface]
+PrivateKey = {{wg_privkey.stdout}}
+ListenPort = {{wireguard_port}}
+
+{% for peer in wireguard_peers %}
+{%   if inventory_hostname == wireguard_server and inventory_hostname != peer['name'] %}
+# Client: {{peer.name}}
+[Peer]
+PublicKey = {{peer.pubkey}}
+AllowedIPs = {{peer.ip}}/32
+{%     if peer['endpoint'] is defined %}
+Endpoint = {{peer.endpoint}}:{{wireguard_port}}
+{%     else %}
+# Roaming, no endpoint defined
+{%     endif %}
+
+{%   else %}
+{%     if peer['name'] != inventory_hostname %}
+{%       if peer['pubkey'] is defined and peer['pubkey']|length > 42 %}
+# {{peer.name}}
+[Peer]
+PublicKey = {{peer.pubkey}}
+{%         if peer['name'] == wireguard_server %}
+AllowedIPs = 0.0.0.0/0
+{%         else %}
+AllowedIPs = {{peer.ip}}/32
+{%         endif %}
+{%         if peer['endpoint'] is defined %}
+Endpoint = {{peer.endpoint}}:{{wireguard_port}}
+{%         else %}
+# Roaming, no endpoint defined
+{%         endif %}
+{%       endif %}
+
+{%     endif %}
+{%   endif %}
+{% endfor %}

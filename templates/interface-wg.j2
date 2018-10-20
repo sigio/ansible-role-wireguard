@@ -1,0 +1,20 @@
+# {{ ansible_managed }}
+
+{% for peer in wireguard_peers %}
+{% if peer['name'] == inventory_hostname %}
+auto {{wireguard_instance_iface}}
+iface {{wireguard_instance_iface}} inet manual
+        pre-up ip link add $IFACE type wireguard
+        pre-up wg setconf $IFACE /etc/wireguard/{{wireguard_instance}}.conf
+        up ip -4 addr add {{peer['ip']}}/{{wireguard_subnet4}} dev $IFACE
+        post-down ip link del $IFACE
+
+{# Disable for now...
+        pre-up ip addr add {{peer['ip']}}/{{wireguard_subnet4}} dev $IFACE
+        pre-up ip link set dev $IFACE up
+iface {{wireguard_instance_iface}} inet6 auto
+        privext 0
+        accept_ra 1
+#}
+{% endif %}
+{% endfor %}

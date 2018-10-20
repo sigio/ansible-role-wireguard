@@ -1,0 +1,17 @@
+---
+
+- name: Create facts.d directory
+  file:
+    path: "/etc/ansible/facts.d"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Create 'fact' plugin for pubkeys
+  template:
+    src: "wireguard.fact.j2"
+    dest: "/etc/ansible/facts.d/wireguard.fact"
+    owner: root
+    group: root
+    mode: 0755

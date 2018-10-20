@@ -1,0 +1,32 @@
+---
+
+- name: Configure 'unstable' repository for debian
+  apt_repository:
+    repo: "deb http://ftp.nl.debian.org/debian/ unstable main"
+    state: present
+    filename: "debian-unstable-main"
+  when: ansible_distribution == "Debian"
+
+- name: Configure wireguard ppa for ubuntu
+  apt_repository:
+    repo: ppa:wireguard/wireguard
+  when: ansible_distribution == "Ubuntu"
+
+- name: Set debian preferences to limit packages from unstable
+  template:
+    src: "limit-unstable.j2"
+    dest: "/etc/apt/preferences.d/limit-unstable"
+    owner: root
+    group: root
+    mode: 0644
+  when: ansible_distribution == "Debian"
+
+- name: Install wireguard
+  apt:
+    name: "{{item}}"
+    state: latest
+  with_items:
+    - wireguard
+    - wireguard-dkms
+    - wireguard-tools
+    - linux-headers-{% if "Ubuntu" in ansible_distribution %}{{ansible_kernel}}{% else %}amd64{% endif %}

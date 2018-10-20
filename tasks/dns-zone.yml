@@ -1,0 +1,9 @@
+---
+
+- name: Template zone-file(s)
+  template:
+    src: "dns-zone-reverse.j2"
+    dest: "/etc/bind/zones/db.{{wireguard_range_base}}.conf"
+  delegate_to: "{{wireguard_server}}"
+  tags:
+    - wireguard_dns_rev

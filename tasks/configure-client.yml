@@ -1,0 +1,64 @@
+---
+
+- name: Create directory for wireguard configurations and keys
+  file:
+    path: "{{wireguard_dir}}"
+    owner: root
+    group: root
+    mode: 0700
+
+- name: Generate private kay
+  shell: "wg genkey > {{wireguard_dir}}/{{wireguard_instance}}.privkey"
+  args:
+    chdir: "{{wireguard_dir}}"
+    creates: "{{wireguard_dir}}/{{wireguard_instance}}.privkey"
+
+- name: Generate public kay
+  shell: "wg pubkey < {{wireguard_dir}}/{{wireguard_instance}}.privkey > {{wireguard_dir}}/{{wireguard_instance}}.pubkey"
+  args:
+    chdir: "{{wireguard_dir}}"
+    creates: "{{wireguard_dir}}/{{wireguard_instance}}.pubkey"
+
+- name: Read private key
+  command: "cat {{wireguard_dir}}/{{wireguard_instance}}.privkey"
+  register: wg_privkey
+  check_mode: no
+  tags:
+    - wireguardconfig
+
+- name: Read public key
+  command: "cat {{wireguard_dir}}/{{wireguard_instance}}.pubkey"
+  register: wg_pubkey
+  check_mode: no
+  tags:
+    - wireguardconfig
+
+- name: Generate config files
+  template:
+    src: "{{item.src}}"
+    dest: "{{item.dest}}"
+    owner: "root"
+    group: "root"
+    mode: "{{item.mode|default('0600')}}"
+  with_items:
+    - { src: "interface-wg.j2", dest: "/etc/network/interfaces.d/{{wireguard_instance}}.cfg" }
+    - { src: "instance.conf.j2", dest: "/etc/wireguard/{{wireguard_instance}}.conf" }
+  tags:
+    - wireguardconfig
+
+- name: Load wireguard module
+  modprobe:
+    name: wireguard
+    state: present
+
+- name: Make sure instance is up
+  command: /sbin/ifup {{wireguard_instance_iface}}
+
+- name: Add myself as peer on wireguard server
+  command: "wg set {{wireguard_instance_iface}} peer {{wg_pubkey.stdout}} endpoint {{ansible_default_ipv4.address}}:{{wireguard_port}}"
+  delegate_to: "{{wireguard_server}}"
+
+- name: reload wireguard configuation
+  command: wg setconf {{wireguard_instance_iface}} /etc/wireguard/{{wireguard_instance}}.conf
+  tags:
+    - wireguardconfig
