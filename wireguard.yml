@@ -1,0 +1,10 @@
+---
+
+- name: wireguard
+  hosts: wireguard-hosts
+  vars:
+    wireguard_instance: "config-entry-name"
+    wireguard_instance_iface: "wg-interface-name"
+  roles:
+    - wireguard
+  tasks:
